@@ -1,0 +1,67 @@
+package me.entropire.simple_factions.Gui;
+
+import me.entropire.simple_factions.FactionInvitor;
+import me.entropire.simple_factions.Simple_Factions;
+import me.entropire.simple_factions.objects.Faction;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+
+import java.util.List;
+
+public class FactionInfoGui extends BaseGui
+{
+    private final String factionName;
+
+    public FactionInfoGui(String factionName)
+    {
+        this.factionName = factionName;
+    }
+
+    @Override
+    public void open(Player player)
+    {
+        Gui gui = new Gui("Info of " + factionName, GuiSize.Small);
+
+        Faction faction = Simple_Factions.factionDatabase.getFactionDataByName(factionName);
+
+        if (faction == null) {
+            player.sendMessage(Component.text("Something went wrong while getting the factions information.", NamedTextColor.RED));
+            return;
+        }
+
+        Player owner = Bukkit.getPlayer(faction.getOwner());
+        String ownerName;
+        if (owner == null)
+        {
+            ownerName = "";
+        }
+        else
+        {
+            ownerName = owner.getName();
+        }
+        List<String> members = faction.getMembers();
+
+        if (members.size() > 10) {
+            members = members.subList(0, 10);
+        }
+
+        gui.addButton(2, "Faction name", Material.NAME_TAG, factionName, (btn, event) -> {});
+        gui.addButton(4, "Faction owner", Material.PLAYER_HEAD, ownerName, (btn, event) -> {});
+        gui.addButton(6, "Faction members", Material.OAK_SIGN, members, (btn, event) -> {});
+        gui.addButton(21, "Join", Material.GREEN_WOOL, "Request to join this faction.", (btn, event) -> {
+            String eventFactionName = ((Gui) event.getInventory().getHolder()).getName().replace("Info of ", "");
+            FactionInvitor.join(player, eventFactionName);
+            player.closeInventory();
+        });
+
+        gui.addButton(23, "Return", Material.RED_WOOL, "Go back to the factions list.",
+                (btn, event) -> new FactionListGui(0).open(player));
+
+        player.openInventory(gui.create());
+    }
+}
+
+
